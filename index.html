@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NLP Course Syllabus</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+        }
+        
+        :root {
+            --primary: #10b981; /* Emerald Green */
+            --primary-dark: #059669; /* Darker Green */
+            --secondary: #6366f1; /* Indigo Purple */
+            --accent: #059669; /* Same as primary-dark for consistency */
+            --light: #f8fafc;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --light-gray: #e2e8f0;
+            --border-radius: 16px;
+            --transition: all 0.2s ease;
+            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        
+        body {
+            background-color: #f1f5f9;
+            color: var(--dark);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .coffee-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, #ffdd00, #ff9900);
+            color: #000;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            z-index: 10;
+        }
+        
+        .coffee-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .coffee-button i {
+            font-size: 1rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 0.5rem 1.25rem;
+            border-radius: 999px;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .header-badge i {
+            margin-right: 0.5rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+        
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--gray);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+        
+        .weeks-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+        
+        .week-card {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+            width: 380px;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--light-gray);
+        }
+        
+        .week-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            border-color: #cbd5e1;
+        }
+        
+        .week-header {
+            background: white;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .week-number {
+            background: var(--primary);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+        
+        .week-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark);
+            flex: 1;
+            line-height: 1.4;
+        }
+        
+        .week-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .week-content ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+        
+        .week-content li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: flex-start;
+            color: var(--gray);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .week-content li i {
+            color: var(--primary);
+            margin-right: 0.75rem;
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        
+        .lab-item {
+            border-top: 1px dashed var(--light-gray);
+            padding-top: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        
+        .lab-item i {
+            color: var(--secondary) !important;
+        }
+        
+        .go-to-ppt {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.75rem 1.25rem;
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+            margin-top: auto;
+        }
+        
+        .go-to-ppt i {
+            margin-right: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .go-to-ppt:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            .coffee-button {
+                top: 0.75rem;
+                right: 0.75rem;
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .weeks-grid {
+                justify-content: center;
+            }
+            
+            .week-card {
+                width: 100%;
+                min-width: auto;
+                max-width: 400px;
+            }
+            
+            .week-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .week-number {
+                margin-bottom: 0.75rem;
+            }
+            
+            .week-title {
+                font-size: 1.15rem;
+            }
+            
+            /* Mobile-specific fixes for header and button positioning */
+            .header-badge {
+                padding: 0.5rem 1rem;
+                font-size: 0.95rem;
+                border-radius: 50px;
+            }
+            
+            .header-badge i {
+                font-size: 0.9rem;
+            }
+            
+            .coffee-button {
+                top: 1rem;
+                right: 1rem;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .coffee-button {
+                top: 0.75rem;
+                right: 0.75rem;
+                padding: 0.4rem 0.7rem;
+                font-size: 0.8rem;
+            }
+            
+            .week-number {
+                width: 32px;
+                height: 32px;
+                font-size: 0.85rem;
+            }
+            
+            .week-title {
+                font-size: 1.1rem;
+            }
+            
+            .week-content {
+                padding: 1.25rem;
+            }
+            
+            .go-to-ppt {
+                padding: 0.65rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            /* Additional mobile optimization */
+            .header-badge {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+                margin-top: 2rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+                line-height: 1.3;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+                line-height: 1.6;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="#" class="coffee-button">
+            <i class="fas fa-spinner fa-spin"></i>
+            Coming Soon !
+        </a>
+        
+        <header>
+            <div class="header-badge">
+                <i class="fas fa-brain"></i>
+                Natural Language Processing Course
+            </div>
+            <h1>NLP Course Syllabus</h1>
+            <p class="subtitle">A comprehensive 3-module journey to understand the fundamentals of NLP, from basic text processing to modern transformer models.</p>
+        </header>
+        
+        <div class="weeks-grid" id="weeksGrid">
+            <!-- Weeks will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // NLP course syllabus data for Modules 1, 2, and 3 (originally 1, 3, and 5)
+        const syllabusData = [
+            {
+                week: 1,
+                title: "What is NLP? Real-World Applications & Basics",
+                topics: [
+                    "Definition: What is NLP? (Computers understanding human language)",
+                    "Real-world examples: Chatbots, spell check, translation, sentiment analysis, voice assistants",
+                    "Why is NLP hard? Ambiguity, context, slang, sarcasm",
+                    "Overview of the NLP pipeline: Text → Tokens → Features → Model → Output",
+                    "Introduction to tokenization with Python"
+                ],
+                lab: "Use NLTK or spaCy to tokenize a sentence and count words"
+            },
+            {
+                week: 2,
+                title: "Representing Text from Words to Numbers",
+                topics: [
+                    "The problem: Computers only understand numbers",
+                    "Bag-of-Words (BoW) model: Simple word counting",
+                    "TF-IDF (Term Frequency – Inverse Document Frequency): Downweighting common words",
+                    "Sparse vs. dense representations",
+                    "Introduction to vectorization for machine learning"
+                ],
+                lab: "Convert text to TF-IDF vectors using scikit-learn and interpret results"
+            },
+            {
+                week: 3,
+                title: "Introduction to Transformers and Modern NLP (Conceptual)",
+                topics: [
+                    "From rule-based → ML → Deep Learning → Transformers",
+                    "What is BERT? (High-level: understands context, bidirectional)",
+                    "Hugging Face and pre-trained models (e.g., transformers library)",
+                    "Prompting and zero-shot classification (demo)",
+                    "The shift from building models to using pre-trained ones"
+                ],
+                lab: "Play with Hugging Face"
+            }
+        ];
+
+        // Generate week cards
+        const weeksGrid = document.getElementById('weeksGrid');
+        syllabusData.forEach(weekData => {
+            const weekCard = document.createElement('div');
+            weekCard.className = 'week-card';
+            weekCard.innerHTML = `
+                <div class="week-header">
+                    <div class="week-number">${weekData.week}</div>
+                    <div class="week-title">${weekData.title}</div>
+                </div>
+                <div class="week-content">
+                    <ul>
+                        ${weekData.topics.map(topic => `<li><i class="fas fa-check-circle"></i> ${topic}</li>`).join('')}
+                        <li class="lab-item"><i class="fas fa-flask"></i> <strong>Lab:</strong> ${weekData.lab}</li>
+                    </ul>
+                    <a href="week${weekData.week}.html" class="go-to-ppt">
+                        <i class="fas fa-play-circle"></i> Go to PPT
+                    </a>
+                </div>
+            `;
+            weeksGrid.appendChild(weekCard);
+        });
+    </script>
+</body>
+</html>
+
