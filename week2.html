@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Representing Text from Words to Numbers</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+        }
+        :root {
+            --primary: #2e7d32; /* Emerald Green */
+            --primary-dark: #25632a;
+            --secondary: #1b5e20;
+            --accent: #66bb6a;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --success: #4ade80;
+            --warning: #facc15;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            --border-radius: 16px;
+            --transition: all 0.3s ease;
+        }
+        body {
+            background: linear-gradient(135deg, #f0f9f0 0%, #e6f5e6 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .slideshow-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            background: white;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .slide {
+            display: none;
+            padding: 50px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .slide.active {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .slide-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+        .slide-number {
+            background: var(--primary);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        .slide-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+        .content-section {
+            margin-bottom: 30px;
+        }
+        .content-section h3 {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+        }
+        .content-section h3 i {
+            margin-right: 12px;
+            color: var(--primary);
+        }
+        .content-section p {
+            margin-bottom: 15px;
+            color: var(--dark);
+            font-size: 1.15rem;
+            line-height: 1.7;
+        }
+        .code-container {
+            position: relative;
+            margin: 25px 0;
+        }
+        .code-block {
+            background: #1e1e2e;
+            color: #e0e0e0;
+            padding: 25px;
+            border-radius: 14px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 1.1rem;
+            overflow-x: auto;
+            line-height: 1.6;
+            border-left: 4px solid var(--accent);
+            margin: 0;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: var(--transition);
+            z-index: 10;
+        }
+        .copy-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        .copy-btn.copied {
+            background: var(--success);
+        }
+        .highlight {
+            background: rgba(46, 125, 50, 0.15);
+            color: var(--primary-dark);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: 600;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.05rem;
+        }
+        .relationship-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 35px 0;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        .entity {
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 14px;
+            padding: 25px;
+            min-width: 220px;
+            text-align: center;
+            box-shadow: 0 6px 16px rgba(46, 125, 50, 0.15);
+        }
+        .entity h4 {
+            color: var(--primary-dark);
+            margin-bottom: 18px;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        .entity p {
+            color: var(--gray);
+            font-size: 1.05rem;
+            margin: 6px 0;
+            line-height: 1.5;
+        }
+        .arrow {
+            font-size: 2.5rem;
+            color: var(--success);
+            margin: 0 25px;
+        }
+        .lab-section {
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.1) 0%, rgba(27, 94, 32, 0.1) 100%);
+            border-radius: 14px;
+            padding: 30px;
+            margin-top: 30px;
+            border-left: 4px solid var(--secondary);
+        }
+        .lab-section h3 {
+            color: var(--secondary);
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+        }
+        .steps-list {
+            padding-left: 30px;
+        }
+        .steps-list li {
+            margin-bottom: 12px;
+            color: var(--dark);
+            font-size: 1.15rem;
+            line-height: 1.6;
+        }
+        /* Custom list styling with single blue dot */
+        .custom-list {
+            padding-left: 20px;
+            margin: 20px 0;
+            list-style: none;
+        }
+        .custom-list li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 12px;
+            color: var(--dark);
+            font-size: 1.15rem;
+            line-height: 1.6;
+        }
+        .custom-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        /* Important Notes section */
+        .important-notes {
+            background: #f8f9fa;
+            border-left: 4px solid var(--warning);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 25px 0;
+        }
+        .important-notes h4 {
+            color: var(--warning);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 1.3rem;
+        }
+        .important-notes h4 i {
+            margin-right: 10px;
+        }
+        .important-notes ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        .important-notes li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 10px;
+            color: var(--dark);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            list-style: none;
+        }
+        .important-notes li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--warning);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .important-notes li code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+        }
+        /* Navigation */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 50px;
+            background: var(--light);
+            border-top: 1px solid var(--light-gray);
+        }
+        .nav-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 22px;
+            transition: var(--transition);
+            box-shadow: 0 6px 15px rgba(46, 125, 50, 0.4);
+        }
+        .nav-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+        .nav-btn:disabled {
+            background: var(--light-gray);
+            color: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .slide-counter {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--gray);
+        }
+        /* Fullscreen button */
+        .fullscreen-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: var(--transition);
+            box-shadow: 0 6px 15px rgba(27, 94, 32, 0.4);
+            margin-left: 15px;
+        }
+        .fullscreen-btn:hover {
+            background: #154d1a;
+            transform: translateY(-3px);
+        }
+        /* Title slide */
+        .title-slide {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+            padding: 60px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+        .title-slide h1 {
+            font-size: 3.5rem;
+            margin-bottom: 25px;
+            font-weight: 800;
+            text-shadow: 0 3px 15px rgba(0,0,0,0.25);
+        }
+        .title-slide .subtitle {
+            font-size: 1.8rem;
+            font-weight: 300;
+            max-width: 900px;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+        /* Progress bar */
+        .progress-container {
+            height: 8px;
+            background: var(--light-gray);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        /* Fullscreen styles */
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1000;
+            border-radius: 0;
+            margin: 0;
+            padding: 0;
+            box-shadow: none;
+        }
+        .fullscreen .navigation {
+            padding: 25px 40px;
+        }
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .slideshow-container {
+                max-width: 1000px;
+            }
+            .slide {
+                padding: 40px;
+            }
+            .slide-title {
+                font-size: 2.0rem;
+            }
+            .title-slide h1 {
+                font-size: 3.0rem;
+            }
+            .title-slide .subtitle {
+                font-size: 1.6rem;
+            }
+        }
+        @media (max-width: 992px) {
+            .slideshow-container {
+                max-width: 800px;
+                height: 88vh;
+            }
+            .slide {
+                padding: 35px;
+            }
+            .slide-header {
+                margin-bottom: 30px;
+            }
+            .slide-title {
+                font-size: 1.8rem;
+            }
+            .title-slide h1 {
+                font-size: 2.6rem;
+            }
+            .title-slide .subtitle {
+                font-size: 1.4rem;
+            }
+            .code-block {
+                font-size: 1.0rem;
+                padding: 20px;
+            }
+            .copy-btn {
+                top: 12px;
+                right: 12px;
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+            }
+            .important-notes {
+                padding: 15px;
+            }
+            .important-notes h4 {
+                font-size: 1.2rem;
+            }
+            .important-notes li {
+                font-size: 1.0rem;
+            }
+        }
+        @media (max-width: 768px) {
+            .slideshow-container {
+                height: 90vh;
+                margin: 10px;
+            }
+            .slide {
+                padding: 25px;
+            }
+            .slide-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .slide-number {
+                margin-bottom: 15px;
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            .slide-title {
+                font-size: 1.5rem;
+            }
+            .title-slide h1 {
+                font-size: 2.2rem;
+            }
+            .title-slide .subtitle {
+                font-size: 1.2rem;
+            }
+            .navigation {
+                padding: 20px 30px;
+            }
+            .nav-btn, .fullscreen-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+            .slide-counter {
+                font-size: 1.1rem;
+            }
+            .code-block {
+                padding: 18px;
+            }
+            .copy-btn {
+                top: 10px;
+                right: 10px;
+                width: 30px;
+                height: 30px;
+                font-size: 11px;
+            }
+            .custom-list li {
+                font-size: 1.1rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .title-slide h1 {
+                font-size: 1.9rem;
+            }
+            .title-slide .subtitle {
+                font-size: 1.05rem;
+            }
+            .slide-title {
+                font-size: 1.4rem;
+            }
+            .code-block {
+                padding: 15px;
+                font-size: 0.9rem;
+            }
+            .content-section h3 {
+                font-size: 1.3rem;
+            }
+            .navigation {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .slide-counter {
+                order: -1;
+            }
+            .copy-btn {
+                top: 8px;
+                right: 8px;
+                width: 28px;
+                height: 28px;
+                font-size: 10px;
+            }
+            .important-notes {
+                padding: 12px;
+            }
+            .important-notes h4 {
+                font-size: 1.1rem;
+            }
+            .important-notes li {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slideshow-container" id="slideshowContainer">
+        <!-- Progress bar -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <!-- Title Slide -->
+        <div class="slide active" data-slide="0">
+            <div class="title-slide">
+                <h1>Representing Text from Words to Numbers</h1>
+                <div class="subtitle">From Tokenization to Vectorization: Preparing Text for ML Models</div>
+            </div>
+        </div>
+        <!-- Slide 1: The Problem -->
+        <div class="slide" data-slide="1">
+            <div class="slide-header">
+                <div class="slide-number">1</div>
+                <h2 class="slide-title">The Core Problem</h2>
+            </div>
+            <div class="content-section">
+                <p>Computers only understand <span class="highlight">numbers</span>, but human language is expressed in <span class="highlight">words</span>. This fundamental mismatch creates a challenge for NLP tasks.</p>
+                <h3><i class="fas fa-bug"></i> The Challenge:</h3>
+                <ul class="custom-list">
+                    <li>Machine learning algorithms require numerical input</li>
+                    <li>Text is unstructured and high-dimensional</li>
+                    <li>Same meaning can be expressed in many different ways</li>
+                    <li>Context and semantics are difficult to capture numerically</li>
+                </ul>
+                <div class="important-notes">
+                    <h4><i class="fas fa-lightbulb"></i> Example:</h4>
+                    <p>Consider the sentence: <em>"The cat sat on the mat"</em></p>
+                    <p>How do we represent this as numbers that a computer can process?</p>
+                </div>
+            </div>
+        </div>
+        <!-- Slide 2: Text Preprocessing -->
+        <div class="slide" data-slide="2">
+            <div class="slide-header">
+                <div class="slide-number">2</div>
+                <h2 class="slide-title">Text Preprocessing Pipeline</h2>
+            </div>
+            <div class="content-section">
+                <p>Before converting text to numbers, we need to preprocess it to standardize and clean the data:</p>
+                <div class="relationship-diagram">
+                    <div class="entity">
+                        <h4>Raw Text</h4>
+                        <p>Original input</p>
+                    </div>
+                    <div class="arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="entity">
+                        <h4>Tokenization</h4>
+                        <p>Word segmentation</p>
+                    </div>
+                    <div class="arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="entity">
+                        <h4>Normalization</h4>
+                        <p>Casing, punctuation</p>
+                    </div>
+                    <div class="arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="entity">
+                        <h4>Stemming/Lemmatization</h4>
+                        <p>Word reduction</p>
+                    </div>
+                    <div class="arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="entity">
+                        <h4>Vectorization</h4>
+                        <p>Numerical representation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Slide 3: Stemming -->
+        <div class="slide" data-slide="3">
+            <div class="slide-header">
+                <div class="slide-number">3</div>
+                <h2 class="slide-title">Stemming: Reducing Words to Roots</h2>
+            </div>
+            <div class="content-section">
+                <p><span class="highlight">Stemming</span> is the process of reducing words to their root form by removing suffixes. It's a rule-based approach that truncates words.</p>
+                <h3><i class="fas fa-code"></i> Python Example with NLTK:</h3>
+                <div class="code-container">
+                    <pre class="code-block" id="code1"># Install: pip install nltk
+import nltk
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
+
+# Download required data (run once)
+nltk.download('punkt')
+
+# Initialize stemmer
+stemmer = PorterStemmer()
+
+# Example text
+text = "The cats are running and jumping in the gardens"
+tokens = word_tokenize(text)
+
+# Apply stemming
+stemmed_tokens = [stemmer.stem(token) for token in tokens]
+print("Original tokens:", tokens)
+print("Stemmed tokens:", stemmed_tokens)
+# Output: ['the', 'cat', 'ar', 'run', 'and', 'jump', 'in', 'the', 'garden']</pre>
+                    <button class="copy-btn" onclick="copyCode('code1')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <h3><i class="fas fa-info-circle"></i> Key Characteristics:</h3>
+                <ul class="custom-list">
+                    <li>Fast and simple algorithm</li>
+                    <li>May produce non-existent words (e.g., "run" from "running")</li>
+                    <li>Doesn't consider context or part of speech</li>
+                    <li>Commonly uses Porter Stemmer algorithm</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Slide 4: Lemmatization -->
+        <div class="slide" data-slide="4">
+            <div class="slide-header">
+                <div class="slide-number">4</div>
+                <h2 class="slide-title">Lemmatization: Context-Aware Reduction</h2>
+            </div>
+            <div class="content-section">
+                <p><span class="highlight">Lemmatization</span> is a more sophisticated approach that reduces words to their base or dictionary form (lemma), considering context and part of speech.</p>
+                <h3><i class="fas fa-code"></i> Python Example with spaCy:</h3>
+                <div class="code-container">
+                    <pre class="code-block" id="code2"># Install: pip install spacy
+# Download model: python -m spacy download en_core_web_sm
+import spacy
+
+# Load English model
+nlp = spacy.load("en_core_web_sm")
+
+# Example text
+text = "The cats are running and jumping in the gardens"
+doc = nlp(text)
+
+# Apply lemmatization
+lemmatized_tokens = [token.lemma_ for token in doc]
+print("Original tokens:", [token.text for token in doc])
+print("Lemmatized tokens:", lemmatized_tokens)
+# Output: ['the', 'cat', 'be', 'run', 'and', 'jump', 'in', 'the', 'garden']</pre>
+                    <button class="copy-btn" onclick="copyCode('code2')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <h3><i class="fas fa-code"></i> Python Example with NLTK:</h3>
+                <div class="code-container">
+                    <pre class="code-block" id="code3"># Install: pip install nltk
+import nltk
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+from nltk.corpus import wordnet
+
+# Download required data (run once)
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('averaged_perceptron_tagger')
+
+# Initialize lemmatizer
+lemmatizer = WordNetLemmatizer()
+
+# Function to get POS tag
+def get_wordnet_pos(word):
+    tag = nltk.pos_tag([word])[0][1][0].upper()
+    tag_dict = {"J": wordnet.ADJ,
+                "N": wordnet.NOUN,
+                "V": wordnet.VERB,
+                "R": wordnet.ADV}
+    return tag_dict.get(tag, wordnet.NOUN)
+
+# Example text
+text = "The cats are running and jumping in the gardens"
+tokens = word_tokenize(text)
+
+# Apply lemmatization
+lemmatized_tokens = [lemmatizer.lemmatize(token, get_wordnet_pos(token)) for token in tokens]
+print("Original tokens:", tokens)
+print("Lemmatized tokens:", lemmatized_tokens)</pre>
+                    <button class="copy-btn" onclick="copyCode('code3')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <h3><i class="fas fa-info-circle"></i> Key Characteristics:</h3>
+                <ul class="custom-list">
+                    <li>Produces actual dictionary words (lemmas)</li>
+                    <li>Considers part of speech and context</li>
+                    <li>More accurate but computationally expensive</li>
+                    <li>Better for semantic analysis tasks</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Slide 5: Stemming vs Lemmatization -->
+        <div class="slide" data-slide="5">
+            <div class="slide-header">
+                <div class="slide-number">5</div>
+                <h2 class="slide-title">Stemming vs. Lemmatization</h2>
+            </div>
+            <div class="content-section">
+                <h3><i class="fas fa-balance-scale"></i> Comparison:</h3>
+                <div class="relationship-diagram">
+                    <div class="entity">
+                        <h4>Stemming</h4>
+                        <p>Rule-based truncation</p>
+                        <p>Fast</p>
+                        <p>Less accurate</p>
+                    </div>
+                    <div class="arrow">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="entity">
+                        <h4>Lemmatization</h4>
+                        <p>Dictionary-based normalization</p>
+                        <p>Slower</p>
+                        <p>More accurate</p>
+                    </div>
+                </div>
+                <h3><i class="fas fa-table"></i> Practical Example:</h3>
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <thead>
+                        <tr style="background: var(--primary); color: white;">
+                            <th style="padding: 10px; text-align: left;">Word</th>
+                            <th style="padding: 10px; text-align: left;">Stemming</th>
+                            <th style="padding: 10px; text-align: left;">Lemmatization</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--light-gray);">
+                            <td style="padding: 10px;">running</td>
+                            <td style="padding: 10px;">run</td>
+                            <td style="padding: 10px;">run</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--light-gray);">
+                            <td style="padding: 10px;">better</td>
+                            <td style="padding: 10px;">better</td>
+                            <td style="padding: 10px;">good</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--light-gray);">
+                            <td style="padding: 10px;">mice</td>
+                            <td style="padding: 10px;">mice</td>
+                            <td style="padding: 10px;">mouse</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--light-gray);">
+                            <td style="padding: 10px;">geese</td>
+                            <td style="padding: 10px;">gees</td>
+                            <td style="padding: 10px;">goose</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3><i class="fas fa-lightbulb"></i> When to Use:</h3>
+                <ul class="custom-list">
+                    <li><strong>Stemming:</strong> When speed is critical and accuracy is less important</li>
+                    <li><strong>Lemmatization:</strong> For semantic tasks, sentiment analysis, or when accuracy is crucial</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Slide 6: Bag-of-Words (BoW) Model -->
+        <div class="slide" data-slide="6">
+            <div class="slide-header">
+                <div class="slide-number">6</div>
+                <h2 class="slide-title">Bag-of-Words (BoW) Model</h2>
+            </div>
+            <div class="content-section">
+                <p>The <span class="highlight">Bag-of-Words</span> model represents text as a bag of its words, ignoring grammar and word order but keeping track of word frequencies.</p>
+                <h3><i class="fas fa-code"></i> Python Example with scikit-learn:</h3>
+                <div class="code-container">
+                    <pre class="code-block" id="code4"># Install: pip install scikit-learn
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Sample documents
+documents = [
+    "Natural language processing is fascinating",
+    "Machine learning and NLP are related fields",
+    "NLP helps computers understand human language"
+]
+
+# Initialize CountVectorizer
+vectorizer = CountVectorizer()
+
+# Fit and transform the documents
+bow_matrix = vectorizer.fit_transform(documents)
+
+# Get feature names (vocabulary)
+feature_names = vectorizer.get_feature_names_out()
+print("Vocabulary:", feature_names)
+print("BoW Matrix Shape:", bow_matrix.shape)
+print("BoW Matrix (Dense):")
+print(bow_matrix.toarray())</pre>
+                    <button class="copy-btn" onclick="copyCode('code4')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <h3><i class="fas fa-info-circle"></i> Characteristics:</h3>
+                <ul class="custom-list">
+                    <li>Simple and intuitive approach</li>
+                    <li>Represents documents as vectors of word counts</li>
+                    <li>Ignores word order and context</li>
+                    <li>Creates high-dimensional sparse matrices</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Slide 7: TF-IDF Model -->
+        <div class="slide" data-slide="7">
+            <div class="slide-header">
+                <div class="slide-number">7</div>
+                <h2 class="slide-title">TF-IDF: Term Frequency - Inverse Document Frequency</h2>
+            </div>
+            <div class="content-section">
+                <p><span class="highlight">TF-IDF</span> measures the importance of a word in a document relative to a collection of documents (corpus).</p>
+                <h3><i class="fas fa-calculator"></i> Formula:</h3>
+                <p><strong>TF-IDF = TF(t,d) × IDF(t)</strong></p>
+                <p>Where:<br>
+                TF(t,d) = (Number of times term t appears in document d) / (Total number of terms in document d)<br>
+                IDF(t) = log(Total number of documents / Number of documents containing term t)</p>
+                <h3><i class="fas fa-code"></i> Python Example:</h3>
+                <div class="code-container">
+                    <pre class="code-block" id="code5"># Install: pip install scikit-learn
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Sample documents
+documents = [
+    "Natural language processing is fascinating",
+    "Machine learning and NLP are related fields",
+    "NLP helps computers understand human language"
+]
+
+# Initialize TfidfVectorizer
+tfidf_vectorizer = TfidfVectorizer()
+
+# Fit and transform the documents
+tfidf_matrix = tfidf_vectorizer.fit_transform(documents)
+
+# Get feature names (vocabulary)
+feature_names = tfidf_vectorizer.get_feature_names_out()
+print("Vocabulary:", feature_names)
+print("TF-IDF Matrix Shape:", tfidf_matrix.shape)
+print("TF-IDF Matrix (Dense):")
+print(tfidf_matrix.toarray())</pre>
+                    <button class="copy-btn" onclick="copyCode('code5')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Slide 8: Sparse vs Dense Representations -->
+        <div class="slide" data-slide="8">
+            <div class="slide-header">
+                <div class="slide-number">8</div>
+                <h2 class="slide-title">Sparse vs Dense Representations</h2>
+            </div>
+            <div class="content-section">
+                <h3><i class="fas fa-compress"></i> Sparse Representations:</h3>
+                <ul class="custom-list">
+                    <li>Most values are zero (high sparsity)</li>
+                    <li>Efficient for storage and computation</li>
+                    <li>Examples: BoW, TF-IDF matrices</li>
+                    <li>Memory efficient for large vocabularies</li>
+                </ul>
+                <h3><i class="fas fa-database"></i> Dense Representations:</h3>
+                <ul class="custom-list">
+                    <li>Most values are non-zero</li>
+                    <li>Better at capturing semantic relationships</li>
+                    <li>Examples: Word2Vec, GloVe, FastText</li>
+                    <li>Fixed-size vectors regardless of vocabulary</li>
+                </ul>
+                <div class="important-notes">
+                    <h4><i class="fas fa-lightbulb"></i> Example:</h4>
+                    <p>For a vocabulary of 10,000 words, a single document might have only 10-50 non-zero values in a BoW matrix (0.1-0.5% density) - this is a sparse representation.</p>
+                </div>
+            </div>
+        </div>
+        <!-- Slide 9: Vectorization for ML -->
+        <div class="slide" data-slide="9">
+            <div class="slide-header">
+                <div class="slide-number">9</div>
+                <h2 class="slide-title">Vectorization for Machine Learning</h2>
+            </div>
+            <div class="content-section">
+                <p>Vectorization transforms text into numerical format suitable for machine learning algorithms:</p>
+                <div class="relationship-diagram">
+                    <div class="entity">
+                        <h4>Text Data</h4>
+                        <p>"Natural language processing"</p>
+                    </div>
+                    <div class="arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="entity">
+                        <h4>Tokenization</h4>
+                        <p>["natural", "language", "processing"]</p>
+                    </div>
+                    <div class="arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="entity">
+                        <h4>Vectorization</h4>
+                        <p>[0.2, 0.5, 0.8, 0.1, ...]</p>
+                    </div>
+                </div>
+                <h3><i class="fas fa-cogs"></i> Common Vectorization Techniques:</h3>
+                <ul class="custom-list">
+                    <li><strong>Count Vectorization:</strong> Word frequencies</li>
+                    <li><strong>TF-IDF:</strong> Term importance relative to corpus</li>
+                    <li><strong>Word Embeddings:</strong> Dense semantic vectors (Word2Vec, GloVe)</li>
+                    <li><strong>Contextual Embeddings:</strong> BERT, GPT for dynamic representations</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Slide 10: Lab - TF-IDF Vectorization -->
+        <div class="slide" data-slide="10">
+            <div class="slide-header">
+                <div class="slide-number">10</div>
+                <h2 class="slide-title">Lab: TF-IDF Vectorization</h2>
+            </div>
+            <div class="content-section">
+                <h3><i class="fas fa-tasks"></i> Objective:</h3>
+                <p>Convert text to TF-IDF vectors using scikit-learn and interpret the results.</p>
+                <h3><i class="fas fa-code"></i> Complete Implementation:</h3>
+                <div class="code-container">
+                    <pre class="code-block" id="code6"># Install: pip install scikit-learn pandas
+from sklearn.feature_extraction.text import TfidfVectorizer
+import pandas as pd
+
+# Sample documents
+documents = [
+    "Natural language processing is a fascinating field",
+    "Machine learning and NLP are closely related",
+    "NLP helps computers understand human language",
+    "Deep learning has improved NLP significantly",
+    "Text processing is essential for NLP applications"
+]
+
+# Initialize TF-IDF vectorizer with preprocessing
+tfidf_vectorizer = TfidfVectorizer(
+    lowercase=True,           # Convert to lowercase
+    stop_words='english',     # Remove common English stop words
+    max_features=1000,        # Limit vocabulary size
+    ngram_range=(1, 2)        # Use unigrams and bigrams
+)
+
+# Fit and transform the documents
+tfidf_matrix = tfidf_vectorizer.fit_transform(documents)
+
+# Get feature names
+feature_names = tfidf_vectorizer.get_feature_names_out()
+
+# Convert to DataFrame for better visualization
+df = pd.DataFrame(tfidf_matrix.toarray(), columns=feature_names)
+print("TF-IDF Matrix Shape:", tfidf_matrix.shape)
+print("\nTF-IDF Matrix (first 3 documents):")
+print(df.head(3).round(3))
+
+# Find highest TF-IDF scores for each document
+for i, doc in enumerate(documents):
+    print(f"\nDocument {i+1}: {doc}")
+    doc_tfidf = tfidf_matrix[i].toarray()[0]
+    top_indices = doc_tfidf.argsort()[-3:][::-1]  # Top 3
+    top_features = [feature_names[idx] for idx in top_indices]
+    top_scores = [doc_tfidf[idx] for idx in top_indices]
+    print(f"Top terms: {list(zip(top_features, top_scores))}")</pre>
+                    <button class="copy-btn" onclick="copyCode('code6')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <div class="lab-section">
+                    <h3><i class="fas fa-rocket"></i> Lab Steps:</h3>
+                    <ol class="steps-list">
+                        <li>Install required packages: <code>pip install scikit-learn pandas</code></li>
+                        <li>Run the code example above</li>
+                        <li>Experiment with different parameters in TfidfVectorizer</li>
+                        <li>Try with your own text documents</li>
+                        <li>Interpret the TF-IDF scores and identify important terms</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <!-- Slide 11: Summary -->
+        <div class="slide" data-slide="11">
+            <div class="slide-header">
+                <div class="slide-number">11</div>
+                <h2 class="slide-title">Summary</h2>
+            </div>
+            <div class="content-section">
+                <h3><i class="fas fa-bullseye"></i> Key Takeaways:</h3>
+                <ul class="custom-list">
+                    <li>Computers require numerical representations of text for processing</li>
+                    <li>Stemming and lemmatization reduce words to their root forms</li>
+                    <li>Bag-of-Words represents text as word frequency counts</li>
+                    <li>TF-IDF measures word importance relative to the corpus</li>
+                    <li>Sparse representations are efficient for large vocabularies</li>
+                    <li>Vectorization is essential for applying ML algorithms to text</li>
+                </ul>
+                <div class="important-notes">
+                    <h4><i class="fas fa-lightbulb"></i> Next Steps:</h4>
+                    <ul>
+                        <li>Explore advanced embedding techniques (Word2Vec, GloVe)</li>
+                        <li>Learn about contextual embeddings (BERT, GPT)</li>
+                        <li>Experiment with different preprocessing techniques</li>
+                        <li>Apply vectorization to real-world text classification tasks</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Navigation -->
+        <div class="navigation">
+            <button class="nav-btn prev-btn" onclick="changeSlide(-1)" aria-label="Previous slide">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="slide-counter">
+                <span id="currentSlide">1</span> / <span id="totalSlides">11</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <button class="nav-btn next-btn" onclick="changeSlide(1)" aria-label="Next slide">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <button class="fullscreen-btn" onclick="toggleFullscreen()" aria-label="Toggle fullscreen" id="fullscreenBtn">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 11; // Total content slides (excluding title)
+        const slideshowContainer = document.getElementById('slideshowContainer');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        let isFullscreen = false;
+        // Update slide counter display
+        function updateSlideCounter() {
+            document.getElementById('currentSlide').textContent = currentSlide === 0 ? 1 : currentSlide;
+            document.getElementById('totalSlides').textContent = totalSlides;
+        }
+        // Update progress bar
+        function updateProgressBar() {
+            const progressBar = document.getElementById('progressBar');
+            const progress = currentSlide === 0 ? 0 : (currentSlide / totalSlides) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        // Go to specific slide
+        function goToSlide(slideIndex) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            // Show the requested slide
+            currentSlide = slideIndex;
+            document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('active');
+            // Update UI
+            updateSlideCounter();
+            updateProgressBar();
+            // Update navigation buttons
+            document.querySelector('.prev-btn').disabled = currentSlide === 0;
+            document.querySelector('.next-btn').disabled = currentSlide === totalSlides;
+        }
+        // Change slide (next/prev)
+        function changeSlide(direction) {
+            let newSlide = currentSlide + direction;
+            // Ensure we stay within bounds
+            if (newSlide < 0) newSlide = 0;
+            if (newSlide > totalSlides) newSlide = totalSlides;
+            goToSlide(newSlide);
+        }
+        // Copy code to clipboard
+        function copyCode(codeId) {
+            const codeElement = document.getElementById(codeId);
+            const textToCopy = codeElement.textContent;
+            // Create temporary textarea element
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            // Update button to show copied state
+            const copyBtn = codeElement.parentElement.querySelector('.copy-btn');
+            copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+            copyBtn.classList.add('copied');
+            // Revert back after 2 seconds
+            setTimeout(() => {
+                copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                copyBtn.classList.remove('copied');
+            }, 2000);
+        }
+        // Toggle fullscreen mode - FIXED VERSION
+        function toggleFullscreen() {
+            if (!document.fullscreenElement && 
+                !document.mozFullScreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.msFullscreenElement) {
+                // Enter fullscreen
+                if (slideshowContainer.requestFullscreen) {
+                    slideshowContainer.requestFullscreen();
+                } else if (slideshowContainer.msRequestFullscreen) {
+                    slideshowContainer.msRequestFullscreen();
+                } else if (slideshowContainer.mozRequestFullScreen) {
+                    slideshowContainer.mozRequestFullScreen();
+                } else if (slideshowContainer.webkitRequestFullscreen) {
+                    slideshowContainer.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                }
+                isFullscreen = true;
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+                isFullscreen = false;
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        }
+        // Handle fullscreen change events
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+        function handleFullscreenChange() {
+            if (!document.fullscreenElement && 
+                !document.mozFullScreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.msFullscreenElement) {
+                isFullscreen = false;
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            } else {
+                isFullscreen = true;
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            }
+        }
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                changeSlide(1);
+            } else if (e.key === 'ArrowLeft') {
+                changeSlide(-1);
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            } else if (e.key === 'Escape') {
+                if (document.fullscreenElement || 
+                    document.mozFullScreenElement || 
+                    document.webkitFullscreenElement || 
+                    document.msFullscreenElement) {
+                    toggleFullscreen();
+                }
+            }
+        });
+        // Initialize slideshow
+        window.addEventListener('load', () => {
+            updateSlideCounter();
+            updateProgressBar();
+            document.querySelector('.prev-btn').disabled = true;
+        });
+    </script>
+</body>
+</html>
+

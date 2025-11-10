@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to Transformers and Modern NLP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+        }
+        :root {
+            --primary: #2e7d32; /* Emerald Green */
+            --primary-dark: #25632a;
+            --secondary: #1b5e20;
+            --accent: #66bb6a;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --success: #4ade80;
+            --warning: #facc15;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            --border-radius: 16px;
+            --transition: all 0.3s ease;
+        }
+        body {
+            background: linear-gradient(135deg, #f0f9f0 0%, #e6f5e6 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .slideshow-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            background: white;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .slide {
+            display: none;
+            padding: 50px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .slide.active {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .slide-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+        .slide-number {
+            background: var(--primary);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        .slide-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+        .content-section {
+            margin-bottom: 30px;
+        }
+        .content-section h3 {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+        }
+        .content-section h3 i {
+            margin-right: 12px;
+            color: var(--primary);
+        }
+        .content-section p {
+            margin-bottom: 15px;
+            color: var(--dark);
+            font-size: 1.15rem;
+            line-height: 1.7;
+        }
+        .code-container {
+            position: relative;
+            margin: 25px 0;
+        }
+        .code-block {
+            background: #1e1e2e;
+            color: #e0e0e0;
+            padding: 25px;
+            border-radius: 14px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 1.1rem;
+            overflow-x: auto;
+            line-height: 1.6;
+            border-left: 4px solid var(--accent);
+            margin: 0;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: var(--transition);
+            z-index: 10;
+        }
+        .copy-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        .copy-btn.copied {
+            background: var(--success);
+        }
+        .highlight {
+            background: rgba(46, 125, 50, 0.15);
+            color: var(--primary-dark);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: 600;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.05rem;
+        }
+        .relationship-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 35px 0;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        .entity {
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 14px;
+            padding: 25px;
+            min-width: 220px;
+            text-align: center;
+            box-shadow: 0 6px 16px rgba(46, 125, 50, 0.15);
+        }
+        .entity h4 {
+            color: var(--primary-dark);
+            margin-bottom: 18px;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        .entity p {
+            color: var(--gray);
+            font-size: 1.05rem;
+            margin: 6px 0;
+            line-height: 1.5;
+        }
+        .arrow {
+            font-size: 2.5rem;
+            color: var(--success);
+            margin: 0 25px;
+        }
+        .lab-section {
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.1) 0%, rgba(27, 94, 32, 0.1) 100%);
+            border-radius: 14px;
+            padding: 30px;
+            margin-top: 30px;
+            border-left: 4px solid var(--secondary);
+        }
+        .lab-section h3 {
+            color: var(--secondary);
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+        }
+        .steps-list {
+            padding-left: 30px;
+        }
+        .steps-list li {
+            margin-bottom: 12px;
+            color: var(--dark);
+            font-size: 1.15rem;
+            line-height: 1.6;
+        }
+        /* Custom list styling with single blue dot */
+        .custom-list {
+            padding-left: 20px;
+            margin: 20px 0;
+            list-style: none;
+        }
+        .custom-list li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 12px;
+            color: var(--dark);
+            font-size: 1.15rem;
+            line-height: 1.6;
+        }
+        .custom-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        /* Important Notes section */
+        .important-notes {
+            background: #f8f9fa;
+            border-left: 4px solid var(--warning);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 25px 0;
+        }
+        .important-notes h4 {
+            color: var(--warning);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 1.3rem;
+        }
+        .important-notes h4 i {
+            margin-right: 10px;
+        }
+        .important-notes ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        .important-notes li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 10px;
+            color: var(--dark);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            list-style: none;
+        }
+        .important-notes li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--warning);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .important-notes li code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+        }
+        /* Navigation */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 50px;
+            background: var(--light);
+            border-top: 1px solid var(--light-gray);
+        }
+        .nav-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 22px;
+            transition: var(--transition);
+            box-shadow: 0 6px 15px rgba(46, 125, 50, 0.4);
+        }
+        .nav-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+        .nav-btn:disabled {
+            background: var(--light-gray);
+            color: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .slide-counter {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--gray);
+        }
+        /* Fullscreen button */
+        .fullscreen-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: var(--transition);
+            box-shadow: 0 6px 15px rgba(27, 94, 32, 0.4);
+            margin-left: 15px;
+        }
+        .fullscreen-btn:hover {
+            background: #154d1a;
+            transform: translateY(-3px);
+        }
+        /* Title slide */
+        .title-slide {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+            padding: 60px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+        .title-slide h1 {
+            font-size: 3.5rem;
+            margin-bottom: 25px;
+            font-weight: 800;
+            text-shadow: 0 3px 15px rgba(0,0,0,0.25);
+        }
+        .title-slide .subtitle {
+            font-size: 1.8rem;
+            font-weight: 300;
+            max-width: 900px;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+        /* Progress bar */
+        .progress-container {
+            height: 8px;
+            background: var(--light-gray);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        /* Fullscreen styles */
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1000;
+            border-radius: 0;
+            margin: 0;
+            padding: 0;
+            box-shadow: none;
+        }
+        .fullscreen .navigation {
+            padding: 25px 40px;
+        }
+        /* Architecture visualization */
+        .architecture-container {
+            display: flex;
+            justify-content: center;
+            margin: 40px 0;
+            position: relative;
+            min-height: 300px;
+        }
+        .layer {
+            position: absolute;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease-out;
+        }
+        .layer.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .layer-1 { top: 20px; left: 50%; transform: translateX(-50%); width: 200px; height: 60px; background: var(--primary); }
+        .layer-2 { top: 120px; left: 30%; width: 180px; height: 55px; background: var(--accent); }
+        .layer-3 { top: 120px; left: 70%; width: 180px; height: 55px; background: var(--accent); }
+        .layer-4 { top: 220px; left: 50%; transform: translateX(-50%); width: 200px; height: 60px; background: var(--secondary); }
+        .connection {
+            position: absolute;
+            background: var(--gray);
+            transform-origin: top center;
+            opacity: 0;
+            transition: opacity 0.6s ease-out;
+        }
+        .connection.active {
+            opacity: 0.6;
+        }
+        .seq-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .seq-token {
+            width: 60px;
+            height: 60px;
+            background: var(--light-gray);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.4s ease-out;
+        }
+        .seq-token.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .seq-token.bert { background: linear-gradient(135deg, #ff9800, #f57c00); color: white; }
+        .seq-token.attention { 
+            background: linear-gradient(135deg, #3f51b5, #303f9f); 
+            color: white; 
+            position: relative;
+        }
+        .attention-dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--warning);
+            border-radius: 50%;
+            top: 5px;
+            right: 5px;
+            opacity: 0;
+            animation: pulse 1.5s infinite;
+        }
+        .attention-dot.active {
+            opacity: 1;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.7; }
+        }
+        .animation-trigger {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .animate-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .animate-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .slideshow-container {
+                max-width: 1000px;
+            }
+            .slide {
+                padding: 40px;
+            }
+            .slide-title {
+                font-size: 2.0rem;
+            }
+            .title-slide h1 {
+                font-size: 3.0rem;
+            }
+            .title-slide .subtitle {
+                font-size: 1.6rem;
+            }
+        }
+        @media (max-width: 992px) {
+            .slideshow-container {
+                max-width: 800px;
+                height: 88vh;
+            }
+            .slide {
+                padding: 35px;
+            }
+            .slide-header {
+                margin-bottom: 30px;
+            }
+            .slide-title {
+                font-size: 1.8rem;
+            }
+            .title-slide h1 {
+                font-size: 2.6rem;
+            }
+            .title-slide .subtitle {
+                font-size: 1.4rem;
+            }
+            .code-block {
+                font-size: 1.0rem;
+                padding: 20px;
+            }
+            .copy-btn {
+                top: 12px;
+                right: 12px;
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+            }
+            .important-notes {
+                padding: 15px;
+            }
+            .important-notes h4 {
+                font-size: 1.2rem;
+            }
+            .important-notes li {
+                font-size: 1.0rem;
+            }
+        }
+        @media (max-width: 768px) {
+            .slideshow-container {
+                height: 90vh;
+                margin: 10px;
+            }
+            .slide {
+                padding: 25px;
+            }
+            .slide-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .slide-number {
+                margin-bottom: 15px;
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            .slide-title {
+                font-size: 1.5rem;
+            }
+            .title-slide h1 {
+                font-size: 2.2rem;
+            }
+            .title-slide .subtitle {
+                font-size: 1.2rem;
+            }
+            .navigation {
+                padding: 20px 30px;
+            }
+            .nav-btn, .fullscreen-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+            .slide-counter {
+                font-size: 1.1rem;
+            }
+            .code-block {
+                padding: 18px;
+            }
+            .copy-btn {
+                top: 10px;
+                right: 10px;
+                width: 30px;
+                height: 30px;
+                font-size: 11px;
+            }
+            .custom-list li {
+                font-size: 1.1rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .title-slide h1 {
+                font-size: 1.9rem;
+            }
+            .title-slide .subtitle {
+                font-size: 1.05rem;
+            }
+            .slide-title {
+                font-size: 1.4rem;
+            }
+            .code-block {
+                padding: 15px;
+                font-size: 0.9rem;
+            }
+            .content-section h3 {
+                font-size: 1.3rem;
+            }
+            .navigation {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .slide-counter {
+                order: -1;
+            }
+            .copy-btn {
+                top: 8px;
+                right: 8px;
+                width: 28px;
+                height: 28px;
+                font-size: 10px;
+            }
+            .important-notes {
+                padding: 12px;
+            }
+            .important-notes h4 {
+                font-size: 1.1rem;
+            }
+            .important-notes li {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slideshow-container" id="slideshowContainer">
+        <!-- Progress bar -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <!-- Title Slide -->
+        <div class="slide active" data-slide="0">
+            <div class="title-slide">
+                <h1>Introduction to Transformers and Modern NLP</h1>
+                <div class="subtitle">From Rule-Based Systems to Pre-trained Models: The Evolution of Language AI</div>
+            </div>
+        </div>
+        <!-- Slide 1: Evolution of NLP -->
+        <div class="slide" data-slide="1">
+            <div class="slide-header">
+                <div class="slide-number">1</div>
+                <h2 class="slide-title">The Evolution of NLP</h2>
+            </div>
+            <div class="content-section">
+                <p>Natural Language Processing has evolved through several distinct paradigms over the decades:</p>
+                <div class="relationship-diagram">
+                    <div class="entity">
+                        <h4>Rule-Based</h4>
+                        <p>1950s-1980s</p>
+                        <p>Handcrafted grammar rules</p>
+                    </div>
+                    <div class="arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="entity">
+                        <h4>Statistical ML</h4>
+                        <p>1990s-2010s</p>
+                        <p>N-grams, SVM, Naive Bayes</p>
+                    </div>
+                    <div class="arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="entity">
+                        <h4>Deep Learning</h4>
+                        <p>2010s</p>
+                        <p>RNNs, LSTMs, CNNs</p>
+                    </div>
+                    <div class="arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="entity">
+                        <h4>Transformers</h4>
+                        <p>2017-Present</p>
+                        <p>Attention mechanisms</p>
+                    </div>
+                </div>
+                <h3><i class="fas fa-history"></i> Key Milestones:</h3>
+                <ul class="custom-list">
+                    <li><strong>1950s:</strong> ELIZA - First rule-based chatbot</li>
+                    <li><strong>1980s:</strong> Statistical methods emerge</li>
+                    <li><strong>2013:</strong> Word2Vec - Distributed word representations</li>
+                    <li><strong>2014:</strong> Seq2Seq models for machine translation</li>
+                    <li><strong>2017:</strong> Transformers - Attention is All You Need</li>
+                    <li><strong>2018:</strong> BERT - Bidirectional context understanding</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Slide 2: Transformers Architecture -->
+        <div class="slide" data-slide="2">
+            <div class="slide-header">
+                <div class="slide-number">2</div>
+                <h2 class="slide-title">Transformer Architecture</h2>
+            </div>
+            <div class="content-section">
+                <p>The Transformer architecture, introduced in "Attention is All You Need" (2017), revolutionized NLP by replacing recurrent and convolutional layers with attention mechanisms.</p>
+                <h3><i class="fas fa-brain"></i> Key Components:</h3>
+                <div class="architecture-container" id="transformerArch">
+                    <div class="layer layer-1" id="inputLayer">Input Embedding + Positional Encoding</div>
+                    <div class="layer layer-2" id="encoderLayer">Encoder Stack (N layers)</div>
+                    <div class="layer layer-3" id="decoderLayer">Decoder Stack (N layers)</div>
+                    <div class="layer layer-4" id="outputLayer">Linear + Softmax</div>
+                    <div class="connection" style="top:80px; left:50%; width:2px; height:40px; transform: translateX(-50%);"></div>
+                    <div class="connection" style="top:175px; left:40%; width:2px; height:45px;"></div>
+                    <div class="connection" style="top:175px; left:60%; width:2px; height:45px;"></div>
+                </div>
+                <div class="animation-trigger">
+                    <button class="animate-btn" onclick="animateTransformer()">Animate Architecture</button>
+                </div>
+                <h3><i class="fas fa-lightbulb"></i> Why Transformers?</h3>
+                <ul class="custom-list">
+                    <li><strong>Parallelization:</strong> No sequential dependencies like RNNs</li>
+                    <li><strong>Long-range dependencies:</strong> Attention connects all positions</li>
+                    <li><strong>Scalability:</strong> Can be trained on massive datasets</li>
+                    <li><strong>Transfer learning:</strong> Pre-trained models adapt to many tasks</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Slide 3: Attention Mechanism -->
+        <div class="slide" data-slide="3">
+            <div class="slide-header">
+                <div class="slide-number">3</div>
+                <h2 class="slide-title">Self-Attention Mechanism</h2>
+            </div>
+            <div class="content-section">
+                <p>Self-attention allows the model to weigh the importance of different words in a sentence when processing each word.</p>
+                <h3><i class="fas fa-eye"></i> How Attention Works:</h3>
+                <div class="seq-container" id="attentionSeq">
+                    <div class="seq-token" id="token1">The</div>
+                    <div class="seq-token" id="token2">cat</div>
+                    <div class="seq-token attention" id="token3">sat</div>
+                    <div class="seq-token" id="token4">on</div>
+                    <div class="seq-token" id="token5">mat</div>
+                    <div class="attention-dot" id="dot1"></div>
+                    <div class="attention-dot" id="dot2"></div>
+                    <div class="attention-dot" id="dot3"></div>
+                    <div class="attention-dot" id="dot4"></div>
+                    <div class="attention-dot" id="dot5"></div>
+                </div>
+                <div class="animation-trigger">
+                    <button class="animate-btn" onclick="animateAttention()">Show Attention Weights</button>
+                </div>
+                <p>When processing the word "sat", the model assigns different attention weights to other words based on their relevance.</p>
+                <h3><i class="fas fa-calculator"></i> Attention Formula:</h3>
+                <p><strong>Attention(Q,K,V) = softmax(QK<sup>T</sup>/√d<sub>k</sub>)V</strong></p>
+                <ul class="custom-list">
+                    <li>Q (Query): What we're looking for</li>
+                    <li>K (Key): What we have</li>
+                    <li>V (Value): Actual content to retrieve</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Slide 4: What is BERT? -->
+        <div class="slide" data-slide="4">
+            <div class="slide-header">
+                <div class="slide-number">4</div>
+                <h2 class="slide-title">What is BERT?</h2>
+            </div>
+            <div class="content-section">
+                <p><span class="highlight">BERT (Bidirectional Encoder Representations from Transformers)</span> is a revolutionary pre-trained language model introduced by Google in 2018.</p>
+                <h3><i class="fas fa-exchange-alt"></i> Key Innovations:</h3>
+                <ul class="custom-list">
+                    <li><strong>Bidirectional context:</strong> Understands words from both left and right context simultaneously</li>
+                    <li><strong>Masked Language Modeling (MLM):</strong> Predicts masked words in sentences during training</li>
+                    <li><strong>Next Sentence Prediction (NSP):</strong> Learns relationships between sentences</li>
+                    <li><strong>Transfer learning:</strong> Fine-tune for specific tasks with minimal data</li>
+                </ul>
+                <div class="seq-container">
+                    <div class="seq-token bert">The</div>
+                    <div class="seq-token bert">cat</div>
+                    <div class="seq-token bert">sat</div>
+                    <div class="seq-token bert">on</div>
+                    <div class="seq-token bert">[MASK]</div>
+                </div>
+                <p>During pre-training, BERT learns to predict "[MASK]" as "mat" by considering context from both directions.</p>
+                <div class="important-notes">
+                    <h4><i class="fas fa-lightbulb"></i> BERT vs Traditional Models:</h4>
+                    <p>Traditional models process text left-to-right or right-to-left, while BERT sees the entire context at once, enabling deeper understanding of word meaning in context.</p>
+                </div>
+            </div>
+        </div>
+        <!-- Slide 5: Hugging Face and Pre-trained Models -->
+        <div class="slide" data-slide="5">
+            <div class="slide-header">
+                <div class="slide-number">5</div>
+                <h2 class="slide-title">Hugging Face and Pre-trained Models</h2>
+            </div>
+            <div class="content-section">
+                <p><span class="highlight">Hugging Face</span> has democratized access to state-of-the-art NLP models through their Transformers library and Model Hub.</p>
+                <h3><i class="fas fa-cloud"></i> Hugging Face Ecosystem:</h3>
+                <ul class="custom-list">
+                    <li><strong>Transformers Library:</strong> Easy-to-use implementation of SOTA models</li>
+                    <li><strong>Model Hub:</strong> Repository of 500,000+ pre-trained models</li>
+                    <li><strong>Pipelines:</strong> High-level APIs for common NLP tasks</li>
+                    <li><strong>Spaces:</strong> Platform for sharing ML demos</li>
+                </ul>
+                <h3><i class="fas fa-code"></i> Basic Usage:</h3>
+                <div class="code-container">
+                    <pre class="code-block" id="code1"># Install: pip install transformers
+from transformers import pipeline
+
+# Create a sentiment analysis pipeline
+classifier = pipeline("sentiment-analysis")
+
+# Analyze text
+result = classifier("I love this new transformer model!")
+print(result)
+# Output: [{'label': 'POSITIVE', 'score': 0.9998}]</pre>
+                    <button class="copy-btn" onclick="copyCode('code1')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <h3><i class="fas fa-rocket"></i> Popular Models:</h3>
+                <ul class="custom-list">
+                    <li><strong>BERT:</strong> Bidirectional understanding</li>
+                    <li><strong>GPT:</strong> Generative pre-training</li>
+                    <li><strong>T5:</strong> Text-to-text transfer</li>
+                    <li><strong>RoBERTa:</strong> Optimized BERT</li>
+                    <li><strong>DistilBERT:</strong> Lightweight BERT</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Slide 6: Prompting and Zero-Shot Classification -->
+        <div class="slide" data-slide="6">
+            <div class="slide-header">
+                <div class="slide-number">6</div>
+                <h2 class="slide-title">Prompting and Zero-Shot Classification</h2>
+            </div>
+            <div class="content-section">
+                <p>Modern NLP enables <span class="highlight">zero-shot learning</span> - performing tasks the model wasn't explicitly trained on, using natural language prompts.</p>
+                <h3><i class="fas fa-bolt"></i> Zero-Shot Classification:</h3>
+                <p>Instead of training on labeled data, you provide candidate labels and let the model choose the best match.</p>
+                <div class="code-container">
+                    <pre class="code-block" id="code2">from transformers import pipeline
+
+# Create zero-shot classifier
+classifier = pipeline("zero-shot-classification")
+
+# Classify text with candidate labels
+sequence = "Artificial intelligence is transforming healthcare"
+candidate_labels = ["technology", "sports", "politics", "health"]
+
+result = classifier(sequence, candidate_labels)
+print(result)
+# Output: {'sequence': 'Artificial intelligence...', 
+#          'labels': ['technology', 'health', 'politics', 'sports'], 
+#          'scores': [0.85, 0.12, 0.02, 0.01]}</pre>
+                    <button class="copy-btn" onclick="copyCode('code2')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <h3><i class="fas fa-lightbulb"></i> How Prompting Works:</h3>
+                <ul class="custom-list">
+                    <li>Model is given a prompt: "This text is about [LABEL]"</li>
+                    <li>It calculates probability for each candidate label</li>
+                    <li>Returns labels ranked by confidence scores</li>
+                    <li>No task-specific training required</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Slide 7: Shift to Pre-trained Models -->
+        <div class="slide" data-slide="7">
+            <div class="slide-header">
+                <div class="slide-number">7</div>
+                <h2 class="slide-title">The Paradigm Shift</h2>
+            </div>
+            <div class="content-section">
+                <p>The NLP landscape has shifted from building models from scratch to leveraging pre-trained models.</p>
+                <div class="relationship-diagram">
+                    <div class="entity">
+                        <h4>Traditional Approach</h4>
+                        <p>Build model from scratch</p>
+                        <p>Requires large labeled datasets</p>
+                        <p>Task-specific architecture</p>
+                    </div>
+                    <div class="arrow">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="entity">
+                        <h4>Modern Approach</h4>
+                        <p>Use pre-trained models</p>
+                        <p>Minimal labeled data needed</p>
+                        <p>Transfer learning</p>
+                    </div>
+                </div>
+                <h3><i class="fas fa-chart-line"></i> Benefits of Pre-trained Models:</h3>
+                <ul class="custom-list">
+                    <li><strong>Reduced development time:</strong> Hours instead of months</li>
+                    <li><strong>Lower data requirements:</strong> Fine-tune with small datasets</li>
+                    <li><strong>Better performance:</strong> Leverage knowledge from massive pre-training</li>
+                    <li><strong>Accessibility:</strong> Democratizes advanced NLP capabilities</li>
+                </ul>
+                <div class="important-notes">
+                    <h4><i class="fas fa-lightbulb"></i> New Developer Workflow:</h4>
+                    <ol>
+                        <li>Identify your NLP task</li>
+                        <li>Find a suitable pre-trained model on Hugging Face</li>
+                        <li>Fine-tune (if needed) or use zero-shot classification</li>
+                        <li>Deploy with minimal code</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <!-- Slide 8: Lab - Hugging Face Playground -->
+        <div class="slide" data-slide="8">
+            <div class="slide-header">
+                <div class="slide-number">8</div>
+                <h2 class="slide-title">Lab: Hugging Face Playground</h2>
+            </div>
+            <div class="content-section">
+                <h3><i class="fas fa-tasks"></i> Objective:</h3>
+                <p>Explore Hugging Face models through hands-on experimentation with different NLP tasks.</p>
+                <h3><i class="fas fa-code"></i> Complete Implementation:</h3>
+                <div class="code-container">
+                    <pre class="code-block" id="code3"># Install required packages
+# pip install transformers torch
+
+from transformers import pipeline
+
+# 1. Sentiment Analysis
+sentiment = pipeline("sentiment-analysis")
+print("Sentiment:", sentiment("I absolutely love this course!"))
+
+# 2. Zero-shot Classification
+zero_shot = pipeline("zero-shot-classification")
+result = zero_shot(
+    "The new smartphone has amazing camera quality",
+    candidate_labels=["technology", "food", "travel"]
+)
+print("Zero-shot:", result["labels"][0], f"({result['scores'][0]:.2f})")
+
+# 3. Text Generation
+generator = pipeline("text-generation", model="gpt2")
+generated = generator("Natural language processing is", max_length=50)
+print("Generated:", generated[0]["generated_text"])
+
+# 4. Named Entity Recognition
+ner = pipeline("ner", grouped_entities=True)
+entities = ner("Apple Inc. is located in Cupertino, California")
+print("Entities:", [(e["word"], e["entity_group"]) for e in entities])</pre>
+                    <button class="copy-btn" onclick="copyCode('code3')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <div class="lab-section">
+                    <h3><i class="fas fa-rocket"></i> Lab Steps:</h3>
+                    <ol class="steps-list">
+                        <li>Install transformers: <code>pip install transformers torch</code></li>
+                        <li>Run the code above to test different NLP pipelines</li>
+                        <li>Experiment with your own text inputs</li>
+                        <li>Try different models from Hugging Face Model Hub</li>
+                        <li>Explore Hugging Face Spaces for interactive demos</li>
+                    </ol>
+                </div>
+                <div class="important-notes">
+                    <h4><i class="fas fa-lightbulb"></i> Pro Tips:</h4>
+                    <ul>
+                        <li>Start with pipelines for quick prototyping</li>
+                        <li>Use <code>device=0</code> parameter to run on GPU</li>
+                        <li>Check model cards for capabilities and limitations</li>
+                        <li>Explore the Hugging Face documentation for advanced usage</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Slide 9: Summary -->
+        <div class="slide" data-slide="9">
+            <div class="slide-header">
+                <div class="slide-number">9</div>
+                <h2 class="slide-title">Summary</h2>
+            </div>
+            <div class="content-section">
+                <h3><i class="fas fa-bullseye"></i> Key Takeaways:</h3>
+                <ul class="custom-list">
+                    <li>NLP evolved from rule-based to transformer-based approaches</li>
+                    <li>Transformers use attention mechanisms for parallel processing</li>
+                    <li>BERT introduced bidirectional context understanding</li>
+                    <li>Hugging Face democratized access to pre-trained models</li>
+                    <li>Zero-shot learning enables tasks without specific training</li>
+                    <li>Modern NLP focuses on using pre-trained models rather than building from scratch</li>
+                </ul>
+                <div class="important-notes">
+                    <h4><i class="fas fa-lightbulb"></i> Future Directions:</h4>
+                    <ul>
+                        <li>Large language models (LLMs) like GPT-4, Claude</li>
+                        <li>Retrieval-augmented generation (RAG)</li>
+                        <li>Efficient fine-tuning techniques (LoRA, QLoRA)</li>
+                        <li>Multimodal models (text + images + audio)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Navigation -->
+        <div class="navigation">
+            <button class="nav-btn prev-btn" onclick="changeSlide(-1)" aria-label="Previous slide">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="slide-counter">
+                <span id="currentSlide">1</span> / <span id="totalSlides">9</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <button class="nav-btn next-btn" onclick="changeSlide(1)" aria-label="Next slide">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <button class="fullscreen-btn" onclick="toggleFullscreen()" aria-label="Toggle fullscreen" id="fullscreenBtn">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 9; // Total content slides (excluding title)
+        const slideshowContainer = document.getElementById('slideshowContainer');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        let isFullscreen = false;
+        
+        // Update slide counter display
+        function updateSlideCounter() {
+            document.getElementById('currentSlide').textContent = currentSlide === 0 ? 1 : currentSlide;
+            document.getElementById('totalSlides').textContent = totalSlides;
+        }
+        
+        // Update progress bar
+        function updateProgressBar() {
+            const progressBar = document.getElementById('progressBar');
+            const progress = currentSlide === 0 ? 0 : (currentSlide / totalSlides) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        // Go to specific slide
+        function goToSlide(slideIndex) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            // Show the requested slide
+            currentSlide = slideIndex;
+            document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('active');
+            // Update UI
+            updateSlideCounter();
+            updateProgressBar();
+            // Update navigation buttons
+            document.querySelector('.prev-btn').disabled = currentSlide === 0;
+            document.querySelector('.next-btn').disabled = currentSlide === totalSlides;
+        }
+        
+        // Change slide (next/prev)
+        function changeSlide(direction) {
+            let newSlide = currentSlide + direction;
+            // Ensure we stay within bounds
+            if (newSlide < 0) newSlide = 0;
+            if (newSlide > totalSlides) newSlide = totalSlides;
+            goToSlide(newSlide);
+        }
+        
+        // Copy code to clipboard
+        function copyCode(codeId) {
+            const codeElement = document.getElementById(codeId);
+            const textToCopy = codeElement.textContent;
+            // Create temporary textarea element
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            // Update button to show copied state
+            const copyBtn = codeElement.parentElement.querySelector('.copy-btn');
+            copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+            copyBtn.classList.add('copied');
+            // Revert back after 2 seconds
+            setTimeout(() => {
+                copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                copyBtn.classList.remove('copied');
+            }, 2000);
+        }
+        
+        // Toggle fullscreen mode - FIXED VERSION
+        function toggleFullscreen() {
+            if (!document.fullscreenElement && 
+                !document.mozFullScreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.msFullscreenElement) {
+                // Enter fullscreen
+                if (slideshowContainer.requestFullscreen) {
+                    slideshowContainer.requestFullscreen();
+                } else if (slideshowContainer.msRequestFullscreen) {
+                    slideshowContainer.msRequestFullscreen();
+                } else if (slideshowContainer.mozRequestFullScreen) {
+                    slideshowContainer.mozRequestFullScreen();
+                } else if (slideshowContainer.webkitRequestFullscreen) {
+                    slideshowContainer.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                }
+                isFullscreen = true;
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+                isFullscreen = false;
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        }
+        
+        // Handle fullscreen change events
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+        function handleFullscreenChange() {
+            if (!document.fullscreenElement && 
+                !document.mozFullScreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.msFullscreenElement) {
+                isFullscreen = false;
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            } else {
+                isFullscreen = true;
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            }
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                changeSlide(1);
+            } else if (e.key === 'ArrowLeft') {
+                changeSlide(-1);
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            } else if (e.key === 'Escape') {
+                if (document.fullscreenElement || 
+                    document.mozFullScreenElement || 
+                    document.webkitFullscreenElement || 
+                    document.msFullscreenElement) {
+                    toggleFullscreen();
+                }
+            }
+        });
+        
+        // Initialize slideshow
+        window.addEventListener('load', () => {
+            updateSlideCounter();
+            updateProgressBar();
+            document.querySelector('.prev-btn').disabled = true;
+        });
+        
+        // Animation functions
+        function animateTransformer() {
+            const layers = [
+                document.getElementById('inputLayer'),
+                document.getElementById('encoderLayer'),
+                document.getElementById('decoderLayer'),
+                document.getElementById('outputLayer')
+            ];
+            const connections = document.querySelectorAll('.connection');
+            
+            // Reset animation
+            layers.forEach(layer => layer.classList.remove('active'));
+            connections.forEach(conn => conn.classList.remove('active'));
+            
+            // Animate sequentially
+            setTimeout(() => layers[0].classList.add('active'), 100);
+            setTimeout(() => connections[0].classList.add('active'), 400);
+            setTimeout(() => {
+                layers[1].classList.add('active');
+                layers[2].classList.add('active');
+            }, 700);
+            setTimeout(() => {
+                connections[1].classList.add('active');
+                connections[2].classList.add('active');
+            }, 1000);
+            setTimeout(() => layers[3].classList.add('active'), 1300);
+        }
+        
+        function animateAttention() {
+            const tokens = [
+                document.getElementById('token1'),
+                document.getElementById('token2'),
+                document.getElementById('token3'),
+                document.getElementById('token4'),
+                document.getElementById('token5')
+            ];
+            const dots = [
+                document.getElementById('dot1'),
+                document.getElementById('dot2'),
+                document.getElementById('dot3'),
+                document.getElementById('dot4'),
+                document.getElementById('dot5')
+            ];
+            
+            // Reset animation
+            tokens.forEach(token => token.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            // Animate tokens
+            tokens.forEach((token, i) => {
+                setTimeout(() => token.classList.add('active'), i * 200);
+            });
+            
+            // Animate attention dots on the "sat" token
+            setTimeout(() => {
+                dots[0].style.left = '30px';
+                dots[0].style.top = '150px';
+                dots[0].classList.add('active');
+            }, 1200);
+            setTimeout(() => {
+                dots[1].style.left = '95px';
+                dots[1].style.top = '150px';
+                dots[1].classList.add('active');
+            }, 1300);
+            setTimeout(() => {
+                dots[2].style.left = '160px';
+                dots[2].style.top = '120px';
+                dots[2].classList.add('active');
+            }, 1400);
+            setTimeout(() => {
+                dots[3].style.left = '225px';
+                dots[3].style.top = '150px';
+                dots[3].classList.add('active');
+            }, 1500);
+            setTimeout(() => {
+                dots[4].style.left = '290px';
+                dots[4].style.top = '150px';
+                dots[4].classList.add('active');
+            }, 1600);
+        }
+    </script>
+</body>
+</html>
